@@ -1,7 +1,9 @@
+nameOverride: "frontend_app"
+
 replicaCount: 3
 
 image:
-  repository: your-docker-hub-id/your-image-name
+  repository: 883640716669.dkr.ecr.us-east-2.amazonaws.com/frontend_app_reg
   tag: latest
   pullPolicy: IfNotPresent
 
