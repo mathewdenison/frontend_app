@@ -3,6 +3,8 @@ import axios from "axios";
 import Timesheet from "./Timesheet";
 import HRDashboard from "./HRDashboard";
 import EmployeeDashboard from "./EmployeeDashboard";
+import { connectSocket } from "../socket";
+
 
 function Login() {
     // normal state
@@ -43,6 +45,10 @@ function Login() {
             );
 
             const { role, csrf_token, employee_id, message } = response.data;
+            if (employee_id && csrf_token) {
+                connectSocket(employee_id, csrf_token);
+            }
+
             console.log("Received CSRF Token:", csrf_token);
 
             // Update state variables

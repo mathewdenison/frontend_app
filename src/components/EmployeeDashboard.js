@@ -3,14 +3,14 @@ import axios from 'axios';
 import Modal from 'react-modal';
 import EditTimeLog from './EditTimeLog';
 
-Modal.setAppElement('#root')
+Modal.setAppElement('#root');
+
 function EmployeeDashboard() {
     const [employees, setEmployees] = useState([]);
     const [timeLogs, setTimeLogs] = useState([]);
     const [error, setError] = useState("");
     const [editingLogId, setEditingLogId] = useState(null);
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
-
 
     const fetchEmployeesAndLogs = async () => {
         try {
@@ -31,6 +31,21 @@ function EmployeeDashboard() {
         fetchEmployeesAndLogs();
     }, []);
 
+    // 🔌 WebSocket dashboard update listener
+    useEffect(() => {
+        const handleDashboardUpdate = (e) => {
+            const update = e.detail;
+
+            if (update.type === "timelog_submitted") {
+                console.log("EmployeeDashboard received timelog update, refreshing logs...");
+                fetchEmployeesAndLogs();
+            }
+        };
+
+        window.addEventListener("dashboardUpdate", handleDashboardUpdate);
+        return () => window.removeEventListener("dashboardUpdate", handleDashboardUpdate);
+    }, []);
+
     return (
         <div>
             <h2>Employee Dashboard</h2>
@@ -47,12 +62,6 @@ function EmployeeDashboard() {
                 <tbody>
                 {employees.map((employee) => {
                     const logs = timeLogs.filter((log) => Number(log.employee) === Number(employee.id));
-
-                    console.log('Single timelog: ', timeLogs[0]);
-                    console.log('Single employee: ', employees[0]);
-                    // Let's log the employees and their associated logs
-                    console.log('Employee: ', employee.name);
-                    console.log('Associated Logs: ', logs);
 
                     return logs.length ? logs.map((log, index) => {
                         const totalHoursWorked = log.monday_hours + log.tuesday_hours +

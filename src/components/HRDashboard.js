@@ -7,15 +7,30 @@ function HRDashboard() {
     const [message, setMessage] = useState("");
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
 
+    const fetchEmployees = async () => {
+        const response = await axios.get(`${baseURL}api/employees/`, {
+            withCredentials: true,
+        });
+        setEmployees(response.data);
+    };
+
     useEffect(() => {
-        const fetchEmployees = async () => {
-            const response = await axios.get(`${baseURL}api/employees/`, {
-                withCredentials: true,
-            });
-            setEmployees(response.data);
+        fetchEmployees();
+    }, []);
+
+    // 🔌 WebSocket dashboard update listener
+    useEffect(() => {
+        const handleDashboardUpdate = (e) => {
+            const update = e.detail;
+
+            if (update.type === "pto_updated") {
+                console.log("HRDashboard received PTO update, refreshing employee list...");
+                fetchEmployees();
+            }
         };
 
-        fetchEmployees();
+        window.addEventListener("dashboardUpdate", handleDashboardUpdate);
+        return () => window.removeEventListener("dashboardUpdate", handleDashboardUpdate);
     }, []);
 
     const updatePTO = async (employeeId) => {
@@ -23,7 +38,7 @@ function HRDashboard() {
             await axios.patch(
                 `${baseURL}api/employees/${employeeId}/pto/`,
                 { pto_balance: ptoBalance[employeeId] },
-                { withCredentials: true } // Include credentials
+                { withCredentials: true }
             );
 
             setMessage(`PTO updated for Employee ID: ${employeeId}`);

@@ -26,22 +26,23 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) { // Add setIsLogge
         pto_hours: 0,  // initialize this state here
     });
 
+    const fetchInitialData = async () => {
+        const responseForWeek = await axios.get(`${baseURL}api/payPeriod`);
+        const weekStartDate = responseForWeek.data.week_start_date;
+        const weekEndDate = responseForWeek.data.week_end_date;
+
+        const responseForPtoBalance = await axios.get(`${baseURL}api/ptoBalance?employee_id=${employeeId}`);
+        setPtoBalance(responseForPtoBalance.data.pto_balance);
+
+        // Set initial state based on API responses
+        setTimesheetData((prevData) => ({
+            ...prevData,
+            week_start_date: weekStartDate,
+            week_end_date: weekEndDate
+        }));
+    };
+
     useEffect(() => {
-        const fetchInitialData = async () => {
-            const responseForWeek = await axios.get(`${baseURL}api/payPeriod`);
-            const weekStartDate = responseForWeek.data.week_start_date;
-            const weekEndDate = responseForWeek.data.week_end_date;
-
-            const responseForPtoBalance = await axios.get(`${baseURL}api/ptoBalance?employee_id=${employeeId}`);
-            setPtoBalance(responseForPtoBalance.data.pto_balance);
-
-            // Set initial state based on API responses
-            setTimesheetData((prevData) => ({
-                ...prevData,
-                week_start_date: weekStartDate,
-                week_end_date: weekEndDate
-            }));
-        };
 
         fetchInitialData();
 
@@ -50,6 +51,22 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) { // Add setIsLogge
             document.cookie = `csrftoken=${csrfToken}; path=/; domain=127.0.0.1; SameSite=Lax`;
         }
     }, [csrfToken, employeeId]);
+
+    useEffect(() => {
+        const handleDashboardUpdate = (e) => {
+            const update = e.detail;
+
+            if (update.type === "timelog_submitted" && update.employee_id === employeeId) {
+                console.log("Received timelog update via WebSocket");
+                // Refresh PTO balance or fetch timesheet data again if needed
+                fetchInitialData();
+            }
+        };
+
+        window.addEventListener("dashboardUpdate", handleDashboardUpdate);
+        return () => window.removeEventListener("dashboardUpdate", handleDashboardUpdate);
+    }, [employeeId]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
