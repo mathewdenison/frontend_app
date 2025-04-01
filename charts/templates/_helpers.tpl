@@ -1,18 +1,18 @@
 # _helpers.tpl
 
 {{- define "frontend_app.name" -}}
-{{- default .Chart.Name .Values.nameOverride | lower | trunc 63 | trimSuffix "-" }}
+{{- default .Chart.Name .Values.nameOverride | replace "_" "-" | lower | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{- define "frontend_app.fullname" -}}
 {{- if .Values.fullnameOverride }}
-{{- .Values.fullnameOverride | lower | trunc 63 | trimSuffix "-" }}
+{{- .Values.fullnameOverride | replace "_" "-" | lower | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- $name := default .Chart.Name .Values.nameOverride | replace "_" "-" }}
 {{- if contains $name .Release.Name }}
-{{- .Release.Name | lower | trunc 63 | trimSuffix "-" }}
+{{- .Release.Name | replace "_" "-" | lower | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- printf "%s-%s" .Release.Name $name | lower | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-%s" .Release.Name $name | replace "_" "-" | lower | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
 {{- end }}
