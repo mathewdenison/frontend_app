@@ -1,4 +1,4 @@
-nameOverride: "frontend_app"
+nameOverride: "frontend-app"
 
 replicaCount: 3
 
