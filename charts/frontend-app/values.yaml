@@ -10,4 +10,4 @@ image:
 
 service:
   type: NodePort
-  port: 8000
+  port: 5000
