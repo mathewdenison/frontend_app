@@ -5,3 +5,4 @@ metadata:
 data:
   REACT_APP_PUBLIC_BASE_URL: "http://user-management-service.default.svc.cluster.local:8000/"
   REACT_APP_DASHBOARD_URL: "http://dashboard-service.default.svc.cluster.local:5000/"
+  REACT_APP_DASHBOARD_SOCKET_URL: "http://dashboard-service.default.svc.cluster.local:8000/"
