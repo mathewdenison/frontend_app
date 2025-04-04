@@ -3,8 +3,8 @@ let socket;
 
 export const connectSocket = (employee_id, auth_token) => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const host = "dashboard-service.default.svc.cluster.local:8000";
-    socket = new WebSocket(`${protocol}://${host}/socket.io/?EIO=4&transport=websocket`);
+    const host = "34.133.98.208"; // Public IP or ingress hostname
+    socket = new WebSocket(`${protocol}://${host}/api/dashboard/socket.io/?EIO=4&transport=websocket`);
 
     socket.onopen = () => {
         const joinPayload = JSON.stringify({
