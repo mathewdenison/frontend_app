@@ -48,7 +48,7 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) { // Add setIsLogge
 
         if (csrfToken) {
             console.log("Overriding csrftoken cookie in Timesheet.");
-            document.cookie = `csrftoken=${csrfToken}; path=/; domain=127.0.0.1; SameSite=Lax`;
+            document.cookie = `csrftoken=${csrfToken}; path=/api/user/csrf; domain=34.133.98.208; SameSite=Lax`;
         }
     }, [csrfToken, employeeId]);
 

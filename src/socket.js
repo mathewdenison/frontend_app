@@ -3,7 +3,7 @@ let socket;
 
 export const connectSocket = (employee_id, auth_token) => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const host = process.env.REACT_APP_DASHBOARD_SOCKET_URL || "127.0.0.1:5000";
+    const host = "dashboard-service.default.svc.cluster.local:8000";
     socket = new WebSocket(`${protocol}://${host}/socket.io/?EIO=4&transport=websocket`);
 
     socket.onopen = () => {
