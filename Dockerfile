@@ -15,8 +15,15 @@ COPY ./ /app/
 # Build the React app (uses REACT_APP_PUBLIC_BASE_URL)
 RUN npm run build
 
-# Stage 2 - the production environment
-FROM nginx:1.18.0-alpine
-COPY --from=build-stage /app/build /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Stage 2 - use Node.js to serve the app directly (without Nginx)
+FROM node:14
+
+WORKDIR /app
+COPY --from=build-stage /app /app
+
+RUN npm install -g serve
+
+EXPOSE 5000
+
+# Run the app with serve (instead of nginx)
+CMD ["serve", "-s", "build", "-l", "5000"]
