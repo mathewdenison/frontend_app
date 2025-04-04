@@ -14,10 +14,10 @@ function EmployeeDashboard() {
 
     const fetchEmployeesAndLogs = async () => {
         try {
-            const responseEmployees = await axios.get(`${baseURL}api/employees/`, {
+            const responseEmployees = await axios.get(`${baseURL}api/user/employees/`, {
                 withCredentials: true,
             });
-            const responseLogs = await axios.get(`${baseURL}api/employees/timelogs/`, {
+            const responseLogs = await axios.get(`${baseURL}api/user/employees/timelogs/`, {
                 withCredentials: true,
             });
             setEmployees(responseEmployees.data);

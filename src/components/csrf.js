@@ -25,7 +25,7 @@ export const setupAxiosInterceptors = () => {
 // Optional: Function to fetch the CSRF cookie explicitly (use if needed on initialization)
 export const initializeCsrf = async () => {
     try {
-        await axios.get("https://127.0.0.1:8000/api/csrf_setup/", {
+        await axios.get("https://127.0.0.1:8000/api/user/csrf_setup/", {
             withCredentials: true, // Ensure the cookie is included in the response
         });
         console.log("CSRF token initialized and cookie set.");

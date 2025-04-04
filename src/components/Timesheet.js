@@ -27,11 +27,11 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) { // Add setIsLogge
     });
 
     const fetchInitialData = async () => {
-        const responseForWeek = await axios.get(`${baseURL}api/payPeriod`);
+        const responseForWeek = await axios.get(`${baseURL}api/user/payPeriod`);
         const weekStartDate = responseForWeek.data.week_start_date;
         const weekEndDate = responseForWeek.data.week_end_date;
 
-        const responseForPtoBalance = await axios.get(`${baseURL}api/ptoBalance?employee_id=${employeeId}`);
+        const responseForPtoBalance = await axios.get(`${baseURL}api/user/ptoBalance?employee_id=${employeeId}`);
         setPtoBalance(responseForPtoBalance.data.pto_balance);
 
         // Set initial state based on API responses
@@ -72,7 +72,7 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) { // Add setIsLogge
         e.preventDefault();
         try {
             const response = await axios.post(
-                `${baseURL}api/employees/${employeeId}/submit_timesheet/`,
+                `${baseURL}api/user/employees/${employeeId}/submit_timesheet/`,
                 { ...timesheetData, employee: employeeId, pto_hours: ptoHours },
                 {
                     withCredentials: true,

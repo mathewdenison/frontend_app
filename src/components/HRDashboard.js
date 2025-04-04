@@ -8,7 +8,7 @@ function HRDashboard() {
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
 
     const fetchEmployees = async () => {
-        const response = await axios.get(`${baseURL}api/employees/`, {
+        const response = await axios.get(`${baseURL}api/user/employees/`, {
             withCredentials: true,
         });
         setEmployees(response.data);
@@ -36,7 +36,7 @@ function HRDashboard() {
     const updatePTO = async (employeeId) => {
         try {
             await axios.patch(
-                `${baseURL}api/employees/${employeeId}/pto/`,
+                `${baseURL}api/user/employees/${employeeId}/pto/`,
                 { pto_balance: ptoBalance[employeeId] },
                 { withCredentials: true }
             );

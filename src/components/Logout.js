@@ -7,7 +7,7 @@ function Logout({ setLoggedIn }) {
         try {
             // Send request to logout endpoint
             await axios.post(
-                `${baseURL}api/logout/`,
+                `${baseURL}api/user/logout/`,
                 {}, // Payload (no data needed)
                 { withCredentials: true } // Include session cookies
             );

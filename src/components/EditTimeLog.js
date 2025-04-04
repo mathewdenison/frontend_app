@@ -9,7 +9,7 @@ function EditTimeLog({ id, closeModal }) {
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await axios.get(`${baseURL}api/timelogs/${id}/`, {
+            const response = await axios.get(`${baseURL}api/user/timelogs/${id}/`, {
                 withCredentials: true,
             });
             setLog(response.data);
@@ -27,7 +27,7 @@ function EditTimeLog({ id, closeModal }) {
 
     const handleSubmit = async(e) => {
         e.preventDefault();
-        const response = await axios.put(`${baseURL}api/timelogs/${id}/`, formData, {
+        const response = await axios.put(`${baseURL}api/user/timelogs/${id}/`, formData, {
             withCredentials: true,
         });
         console.log(response);

@@ -39,7 +39,7 @@ function Login() {
         try {
             // Send the username and password to the backend
             const response = await axios.post(
-                `${baseURL}api/login/`,
+                `${baseURL}api/user/login/`,
                 { username, password },
                 { withCredentials: true } // Include credentials for cookies
             );
