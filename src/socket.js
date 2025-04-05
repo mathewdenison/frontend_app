@@ -1,14 +1,16 @@
-import { io } from "socket.io-client";  // Import the Socket.IO client
+import { io } from "socket.io-client";
 
 let socket;
 
 export const connectSocket = (employee_id, auth_token) => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const host = "34.133.98.208";  // Public IP of the dashboard service
-    // Use the Socket.IO client to handle the connection
-    socket = io(`${protocol}://${host}/api/dashboard/socket.io`, {
-        query: { employee_id, auth_token },  // Sending the initial data
-        transports: ['websocket']  // Ensures that only WebSockets are used
+    const host = "34.133.98.208";
+
+    // THIS IS THE KEY LINE
+    socket = io(`${protocol}://${host}`, {
+        path: '/api/dashboard/socket.io',  // ✅ Match this to Flask-SocketIO path
+        query: { employee_id, auth_token },
+        transports: ['websocket'],
     });
 
     socket.on('connect', () => {
