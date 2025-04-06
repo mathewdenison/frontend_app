@@ -1,34 +1,33 @@
-import { io } from "socket.io-client";
-
 let socket;
 
 export const connectSocket = (employee_id, auth_token) => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     const host = "34.118.235.1:8000";
+    // Build the WebSocket URL using the plain WebSocket endpoint.
+    const wsUrl = `${protocol}://${host}/ws/dashboard?employee_id=${employee_id}&auth_token=${auth_token}`;
 
-    socket = io(`${protocol}://${host}`, {
-        // Use the default path unless you change it on the server.
-        path: '/socket.io',
-        auth: { employee_id, auth_token },
-        transports: ['websocket'],
-    });
+    socket = new WebSocket(wsUrl);
 
-    socket.on('connect', () => {
-        console.log("Socket.IO connected");
-    });
+    socket.onopen = () => {
+        console.log("WebSocket connected");
+    };
 
-    socket.on('dashboard_update', (update) => {
-        const event = new CustomEvent("dashboardUpdate", { detail: update });
-        window.dispatchEvent(event);
-    });
+    socket.onmessage = (event) => {
+        console.log("Received:", event.data);
+        const update = JSON.parse(event.data);
+        const dashboardEvent = new CustomEvent("dashboardUpdate", { detail: update });
+        window.dispatchEvent(dashboardEvent);
+    };
 
-    socket.on('disconnect', () => {
-        console.log("Socket.IO disconnected");
-    });
+    socket.onclose = () => {
+        console.log("WebSocket disconnected");
+    };
 
-    socket.on('connect_error', (error) => {
-        console.error("Socket.IO connection error:", error);
-    });
+    socket.onerror = (error) => {
+        console.error("WebSocket connection error:", error);
+    };
+
+    return socket;
 };
 
 export const getSocket = () => socket;
