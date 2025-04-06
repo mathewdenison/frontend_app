@@ -58,7 +58,7 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
         }
     }, [csrfToken, employeeId]);
 
-    // Listen for a custom event to trigger a refresh.
+    // Listen for a custom "dashboardRefresh" event to trigger a refresh.
     useEffect(() => {
         const handleRefreshEvent = () => {
             console.log("Dashboard refresh event received in Timesheet.");
@@ -69,7 +69,22 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
         return () => window.removeEventListener("dashboardRefresh", handleRefreshEvent);
     }, [triggerRefresh]);
 
-    // Re-fetch data whenever refreshFlag changes.
+    // Listen for a "dashboardUpdate" event and update PTO balance if type is "pto_lookup"
+    useEffect(() => {
+        const handleDashboardUpdate = (e) => {
+            const update = e.detail;
+            console.log("Dashboard update received:", update);
+            if (update.type === "pto_lookup" && String(update.employee_id) === String(employeeId)) {
+                console.log("Received PTO lookup update via WebSocket, updating PTO balance to:", update.payload.pto_balance);
+                setPtoBalance(update.payload.pto_balance);
+            }
+        };
+
+        window.addEventListener("dashboardUpdate", handleDashboardUpdate);
+        return () => window.removeEventListener("dashboardUpdate", handleDashboardUpdate);
+    }, [employeeId]);
+
+    // Re-fetch data whenever refreshFlag or employeeId changes.
     useEffect(() => {
         console.log("Refresh flag updated in Timesheet, re-fetching data...");
         fetchInitialData();
@@ -98,7 +113,7 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if (name === 'ptoHours') {
+        if(name === 'ptoHours') {
             setPtoHours(value);
             setTimesheetData((prevData) => ({
                 ...prevData,
