@@ -1,10 +1,10 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Timesheet from "./Timesheet";
 import HRDashboard from "./HRDashboard";
 import EmployeeDashboard from "./EmployeeDashboard";
 import { connectSocket } from "../socket";
-
+import { RefreshProvider } from "../contexts/RefreshContext";
 
 function Login() {
     // normal state
@@ -41,7 +41,7 @@ function Login() {
             const response = await axios.post(
                 `${baseURL}api/user/login/`,
                 { username, password },
-                { withCredentials: true } // Include credentials for cookies
+                { withCredentials: true }
             );
 
             const { role, csrf_token, employee_id, message } = response.data;
@@ -57,50 +57,34 @@ function Login() {
             setEmployeeId(employee_id);
             setMessage(message);
             setIsLoggedIn(true);
-
         } catch (err) {
             console.error("Login failed:", err.response?.data || err.message);
             setMessage("Login failed. Please try again.");
         }
     };
 
-    // Redirect to the Timesheet component once logged in
+    // Once logged in, wrap the dashboard components with the RefreshProvider.
     if (isLoggedIn && employeeId && role) {
-        if (role === 'Employee') {
-            return (
-                <>
-                    <Timesheet
-                        employeeId={employeeId}
-                        csrfToken={csrfToken}
-                        setIsLoggedIn={setIsLoggedIn}
-                    />
-                </>
-            );
-        } else if (role === 'HR') {
-            return (
-                <>
-                    <Timesheet
-                        employeeId={employeeId}
-                        csrfToken={csrfToken}
-                        setIsLoggedIn={setIsLoggedIn}
-                    />
-                    <EmployeeDashboard setIsLoggedIn={setIsLoggedIn} />
-                    <HRDashboard setIsLoggedIn={setIsLoggedIn} />
-                </>
-            );
-        } else if (role === 'Manager') {
-            return (
-                <>
-                    <Timesheet
-                        employeeId={employeeId}
-                        csrfToken={csrfToken}
-                        setIsLoggedIn={setIsLoggedIn}
-                    />
-                    <EmployeeDashboard setIsLoggedIn={setIsLoggedIn} />
-                </>
-            );
-        }
-        return <div>Error: Unrecognized role</div>;
+        return (
+            <RefreshProvider>
+                {role === "Employee" && (
+                    <Timesheet employeeId={employeeId} csrfToken={csrfToken} setIsLoggedIn={setIsLoggedIn} />
+                )}
+                {role === "HR" && (
+                    <>
+                        <Timesheet employeeId={employeeId} csrfToken={csrfToken} setIsLoggedIn={setIsLoggedIn} />
+                        <EmployeeDashboard setIsLoggedIn={setIsLoggedIn} />
+                        <HRDashboard setIsLoggedIn={setIsLoggedIn} />
+                    </>
+                )}
+                {role === "Manager" && (
+                    <>
+                        <Timesheet employeeId={employeeId} csrfToken={csrfToken} setIsLoggedIn={setIsLoggedIn} />
+                        <EmployeeDashboard setIsLoggedIn={setIsLoggedIn} />
+                    </>
+                )}
+            </RefreshProvider>
+        );
     }
 
     return (
@@ -110,22 +94,12 @@ function Login() {
             <form onSubmit={handleLogin}>
                 <label>
                     Username:
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                    />
+                    <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
                 </label>
                 <br />
                 <label>
                     Password:
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
+                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </label>
                 <br />
                 <button type="submit">Login</button>

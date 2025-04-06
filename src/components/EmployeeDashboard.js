@@ -2,8 +2,18 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Modal from 'react-modal';
 import EditTimeLog from './EditTimeLog';
+import { useRefresh } from "../contexts/RefreshContext"; // Import the custom hook
+import './Timesheet.css';
 
 Modal.setAppElement('#root');
+
+function dateFromStr(dateStr) {
+    if (dateStr instanceof Date) {
+        return dateStr;
+    }
+    const [year, month, day] = dateStr.split("-").map(Number);
+    return new Date(year, month - 1, day);
+}
 
 function EmployeeDashboard() {
     const [employees, setEmployees] = useState([]);
@@ -11,6 +21,9 @@ function EmployeeDashboard() {
     const [error, setError] = useState("");
     const [editingLogId, setEditingLogId] = useState(null);
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
+
+    // Use refresh context to get the refresh flag.
+    const { refreshFlag } = useRefresh();
 
     const fetchEmployeesAndLogs = async () => {
         try {
@@ -21,10 +34,7 @@ function EmployeeDashboard() {
                 withCredentials: true,
             });
 
-            // 🔍 Debug the response if needed
-            console.log("responseLogs.data:", responseLogs.data);
-
-            // ✅ Ensure timeLogs is an array
+            // Ensure timeLogs is an array
             const logsArray = Array.isArray(responseLogs.data)
                 ? responseLogs.data
                 : Array.isArray(responseLogs.data.timelogs)
@@ -39,24 +49,31 @@ function EmployeeDashboard() {
         }
     };
 
+    // Fetch data on mount.
     useEffect(() => {
         fetchEmployeesAndLogs();
     }, []);
 
-    // 🔌 WebSocket dashboard update listener
+    // Re-fetch data whenever the refreshFlag changes.
     useEffect(() => {
-        const handleDashboardUpdate = (e) => {
-            const update = e.detail;
+        console.log("Refresh flag updated in EmployeeDashboard, re-fetching data...");
+        fetchEmployeesAndLogs();
+    }, [refreshFlag]);
 
-            if (update.type === "timelog_submitted") {
-                console.log("EmployeeDashboard received timelog update, refreshing logs...");
-                fetchEmployeesAndLogs();
-            }
-        };
+    const updatePTO = async (employeeId) => {
+        try {
+            await axios.patch(
+                `${baseURL}api/user/employees/${employeeId}/pto/`,
+                { pto_balance: ptoBalance[employeeId] },
+                { withCredentials: true }
+            );
 
-        window.addEventListener("dashboardUpdate", handleDashboardUpdate);
-        return () => window.removeEventListener("dashboardUpdate", handleDashboardUpdate);
-    }, []);
+            setError(""); // Clear any previous error.
+        } catch (err) {
+            setError("Failed to update PTO.");
+            console.error(err);
+        }
+    };
 
     return (
         <div>
@@ -76,7 +93,6 @@ function EmployeeDashboard() {
                     const logs = timeLogs.filter(
                         (log) => Number(log.employee) === Number(employee.id)
                     );
-
                     return logs.length
                         ? logs.map((log, index) => {
                             const totalHoursWorked =
@@ -85,7 +101,6 @@ function EmployeeDashboard() {
                                 log.wednesday_hours +
                                 log.thursday_hours +
                                 log.friday_hours;
-
                             return (
                                 <tr key={employee.id + "-" + index}>
                                     <td>{employee.id}</td>

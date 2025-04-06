@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useRefresh } from "../contexts/RefreshContext"; // Import the custom hook
 
 function HRDashboard() {
     const [employees, setEmployees] = useState([]);
@@ -7,31 +8,30 @@ function HRDashboard() {
     const [message, setMessage] = useState("");
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
 
+    // Get the refresh flag from our RefreshContext
+    const { refreshFlag } = useRefresh();
+
     const fetchEmployees = async () => {
-        const response = await axios.get(`${baseURL}api/user/employees/`, {
-            withCredentials: true,
-        });
-        setEmployees(response.data);
+        try {
+            const response = await axios.get(`${baseURL}api/user/employees/`, {
+                withCredentials: true,
+            });
+            setEmployees(response.data);
+        } catch (error) {
+            console.error("Error fetching employees:", error);
+        }
     };
 
+    // Initial fetch when component mounts
     useEffect(() => {
         fetchEmployees();
     }, []);
 
-    // 🔌 WebSocket dashboard update listener
+    // Re-fetch employees whenever the refresh flag changes
     useEffect(() => {
-        const handleDashboardUpdate = (e) => {
-            const update = e.detail;
-
-            if (update.type === "pto_updated") {
-                console.log("HRDashboard received PTO update, refreshing employee list...");
-                fetchEmployees();
-            }
-        };
-
-        window.addEventListener("dashboardUpdate", handleDashboardUpdate);
-        return () => window.removeEventListener("dashboardUpdate", handleDashboardUpdate);
-    }, []);
+        console.log("Refresh flag changed in HRDashboard, re-fetching employees...");
+        fetchEmployees();
+    }, [refreshFlag]);
 
     const updatePTO = async (employeeId) => {
         try {
@@ -40,7 +40,6 @@ function HRDashboard() {
                 { pto_balance: ptoBalance[employeeId] },
                 { withCredentials: true }
             );
-
             setMessage(`PTO updated for Employee ID: ${employeeId}`);
         } catch (err) {
             setMessage("Failed to update PTO.");

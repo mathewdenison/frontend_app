@@ -20,6 +20,19 @@ export const connectSocket = (employee_id, auth_token) => {
         window.dispatchEvent(dashboardEvent);
     };
 
+    socket.onmessage = (event) => {
+        console.log("Received:", event.data);
+        const data = JSON.parse(event.data);
+        if (data.type && data.type === "refresh_data") {
+            // Dispatch a custom event that our RefreshProvider hook or child components can listen for.
+            window.dispatchEvent(new CustomEvent("dashboardRefresh"));
+        } else {
+            // For other message types, dispatch a standard update event.
+            const dashboardEvent = new CustomEvent("dashboardUpdate", { detail: data });
+            window.dispatchEvent(dashboardEvent);
+        }
+    };
+
     socket.onclose = () => {
         console.log("WebSocket disconnected");
     };

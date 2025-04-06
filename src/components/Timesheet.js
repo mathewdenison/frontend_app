@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Logout from "./Logout"; // Import the Logout component
+import Logout from "./Logout";
+import { useRefresh } from "../contexts/RefreshContext"; // Import our custom hook
 import './Timesheet.css';
 
 function dateFromStr(dateStr) {
@@ -11,7 +12,7 @@ function dateFromStr(dateStr) {
     return new Date(year, month - 1, day);
 }
 
-function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) { // Add setIsLoggedIn as a prop
+function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
     const [ptoHours, setPtoHours] = useState(0);
     const [ptoBalance, setPtoBalance] = useState(0);
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
@@ -23,27 +24,32 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) { // Add setIsLogge
         wednesday_hours: "",
         thursday_hours: "",
         friday_hours: "",
-        pto_hours: 0,  // initialize this state here
+        pto_hours: 0,
     });
 
+    // Use our refresh context to trigger re-fetching of data.
+    const { refreshFlag } = useRefresh();
+
     const fetchInitialData = async () => {
-        const responseForWeek = await axios.get(`${baseURL}api/user/payPeriod`);
-        const weekStartDate = responseForWeek.data.week_start_date;
-        const weekEndDate = responseForWeek.data.week_end_date;
+        try {
+            const responseForWeek = await axios.get(`${baseURL}api/user/payPeriod`);
+            const weekStartDate = responseForWeek.data.week_start_date;
+            const weekEndDate = responseForWeek.data.week_end_date;
 
-        const responseForPtoBalance = await axios.get(`${baseURL}api/user/ptoBalance?employee_id=${employeeId}`);
-        setPtoBalance(responseForPtoBalance.data.pto_balance);
+            const responseForPtoBalance = await axios.get(`${baseURL}api/user/ptoBalance?employee_id=${employeeId}`);
+            setPtoBalance(responseForPtoBalance.data.pto_balance);
 
-        // Set initial state based on API responses
-        setTimesheetData((prevData) => ({
-            ...prevData,
-            week_start_date: weekStartDate,
-            week_end_date: weekEndDate
-        }));
+            setTimesheetData((prevData) => ({
+                ...prevData,
+                week_start_date: weekStartDate,
+                week_end_date: weekEndDate
+            }));
+        } catch (error) {
+            console.error("Error fetching initial data:", error);
+        }
     };
 
     useEffect(() => {
-
         fetchInitialData();
 
         if (csrfToken) {
@@ -52,21 +58,13 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) { // Add setIsLogge
         }
     }, [csrfToken, employeeId]);
 
+    // Re-fetch data when refreshFlag changes.
     useEffect(() => {
-        const handleDashboardUpdate = (e) => {
-            const update = e.detail;
-
-            if (update.type === "timelog_submitted" && update.employee_id === employeeId) {
-                console.log("Received timelog update via WebSocket");
-                // Refresh PTO balance or fetch timesheet data again if needed
-                fetchInitialData();
-            }
-        };
-
-        window.addEventListener("dashboardUpdate", handleDashboardUpdate);
-        return () => window.removeEventListener("dashboardUpdate", handleDashboardUpdate);
-    }, [employeeId]);
-
+        if (isLoggedIn && employeeId) {
+            console.log("Refresh triggered in Timesheet.");
+            fetchInitialData();
+        }
+    }, [refreshFlag, isLoggedIn, employeeId]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -91,11 +89,11 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) { // Add setIsLogge
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if(name === 'ptoHours') {
+        if (name === 'ptoHours') {
             setPtoHours(value);
             setTimesheetData((prevData) => ({
                 ...prevData,
-                pto_hours: value,  // update this state when ptoHours change
+                pto_hours: value,
             }));
         } else {
             setTimesheetData((prevData) => ({
@@ -108,11 +106,12 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) { // Add setIsLogge
     return (
         <div>
             <h2>Submit Timesheet</h2>
-            <h3>PTO Balance: {ptoBalance}</h3> {/* Display PTO balance */}
+            <h3>PTO Balance: {ptoBalance}</h3>
             <h3>Week Start Date: {dateFromStr(timesheetData.week_start_date).toDateString()}</h3>
             <h3>Week End Date: {dateFromStr(timesheetData.week_end_date).toDateString()}</h3>
-            <div className="logout-button">  {/* Assign the CSS class to the Logout button */} <Logout
-                setLoggedIn={setIsLoggedIn}/> {/* Logout button */} </div>
+            <div className="logout-button">
+                <Logout setLoggedIn={setIsLoggedIn} />
+            </div>
             <form onSubmit={handleSubmit}>
                 <br/>
                 <label>
