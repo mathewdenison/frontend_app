@@ -2,8 +2,9 @@ let socket;
 
 export const connectSocket = (employee_id, auth_token) => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const host = "34.118.235.1:8000";
-    // Build the WebSocket URL using the plain WebSocket endpoint.
+    // Use the public IP from your ingress
+    const host = "34.133.98.208";
+    // Update the path if needed (this example uses /ws/dashboard)
     const wsUrl = `${protocol}://${host}/ws/dashboard?employee_id=${employee_id}&auth_token=${auth_token}`;
 
     socket = new WebSocket(wsUrl);
