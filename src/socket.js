@@ -6,15 +6,15 @@ export const connectSocket = (employee_id, auth_token) => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     const host = "34.118.235.1:8000";
 
-    // THIS IS THE KEY LINE
     socket = io(`${protocol}://${host}`, {
-        path: '/ws/dashboard',  // ✅ Match this to Flask-SocketIO path
-        query: { employee_id, auth_token },
+        // Use the default path unless you change it on the server.
+        path: '/socket.io',
+        auth: { employee_id, auth_token },
         transports: ['websocket'],
     });
 
     socket.on('connect', () => {
-        console.log("WebSocket connected");
+        console.log("Socket.IO connected");
     });
 
     socket.on('dashboard_update', (update) => {
@@ -23,11 +23,11 @@ export const connectSocket = (employee_id, auth_token) => {
     });
 
     socket.on('disconnect', () => {
-        console.log("WebSocket disconnected");
+        console.log("Socket.IO disconnected");
     });
 
     socket.on('connect_error', (error) => {
-        console.error("WebSocket connection error:", error);
+        console.error("Socket.IO connection error:", error);
     });
 };
 
