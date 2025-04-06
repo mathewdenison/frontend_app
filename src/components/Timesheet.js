@@ -28,7 +28,7 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
     });
 
     // Use our refresh context to trigger re-fetching of data.
-    const { refreshFlag } = useRefresh();
+    const { refreshFlag, triggerRefresh } = useRefresh();
 
     const fetchInitialData = async () => {
         try {
@@ -58,12 +58,21 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
         }
     }, [csrfToken, employeeId]);
 
-    // Re-fetch data when refreshFlag or employeeId changes.
+    // Listen for a custom event to trigger a refresh.
     useEffect(() => {
-        if (employeeId) {
-            console.log("Refresh triggered in Timesheet.");
-            fetchInitialData();
-        }
+        const handleRefreshEvent = () => {
+            console.log("Dashboard refresh event received in Timesheet.");
+            triggerRefresh();
+        };
+
+        window.addEventListener("dashboardRefresh", handleRefreshEvent);
+        return () => window.removeEventListener("dashboardRefresh", handleRefreshEvent);
+    }, [triggerRefresh]);
+
+    // Re-fetch data whenever refreshFlag changes.
+    useEffect(() => {
+        console.log("Refresh flag updated in Timesheet, re-fetching data...");
+        fetchInitialData();
     }, [refreshFlag, employeeId]);
 
     const handleSubmit = async (e) => {
@@ -89,7 +98,7 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if(name === 'ptoHours') {
+        if (name === 'ptoHours') {
             setPtoHours(value);
             setTimesheetData((prevData) => ({
                 ...prevData,

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 
 const RefreshContext = createContext();
 
@@ -7,10 +7,10 @@ export const RefreshProvider = ({ children }) => {
 
     // This function triggers a refresh by updating the flag.
     const triggerRefresh = useCallback(() => {
+        console.log("Refresh triggered in RefreshContext");
         setRefreshFlag((prev) => prev + 1);
     }, []);
 
-    // Optionally, expose the refresh flag for debugging.
     return (
         <RefreshContext.Provider value={{ refreshFlag, triggerRefresh }}>
             {children}
