@@ -4,7 +4,7 @@ let socket;
 
 export const connectSocket = (employee_id, auth_token) => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const host = "34.133.98.208";
+    const host = "34.118.235.1";
 
     // THIS IS THE KEY LINE
     socket = io(`${protocol}://${host}`, {
