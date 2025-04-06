@@ -8,7 +8,7 @@ export const connectSocket = (employee_id, auth_token) => {
 
     // THIS IS THE KEY LINE
     socket = io(`${protocol}://${host}`, {
-        path: '/api/dashboard/socket.io',  // ✅ Match this to Flask-SocketIO path
+        path: '/ws/dashboard',  // ✅ Match this to Flask-SocketIO path
         query: { employee_id, auth_token },
         transports: ['websocket'],
     });
