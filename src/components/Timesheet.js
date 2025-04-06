@@ -58,13 +58,13 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
         }
     }, [csrfToken, employeeId]);
 
-    // Re-fetch data when refreshFlag changes.
+    // Re-fetch data when refreshFlag or employeeId changes.
     useEffect(() => {
-        if (isLoggedIn && employeeId) {
+        if (employeeId) {
             console.log("Refresh triggered in Timesheet.");
             fetchInitialData();
         }
-    }, [refreshFlag, isLoggedIn, employeeId]);
+    }, [refreshFlag, employeeId]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -89,7 +89,7 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if (name === 'ptoHours') {
+        if(name === 'ptoHours') {
             setPtoHours(value);
             setTimesheetData((prevData) => ({
                 ...prevData,
