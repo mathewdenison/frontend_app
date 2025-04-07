@@ -4,7 +4,7 @@ import { useRefresh } from "../contexts/RefreshContext"; // Import the custom ho
 
 function HRDashboard() {
     const [employees, setEmployees] = useState([]);
-    const [bulkPTO, setBulkPTO] = useState([]);
+    const [bulkPTO, setBulkPTO] = useState([]); // Contains PTO records: { employee_id, pto_balance }
     const [message, setMessage] = useState("");
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
 
@@ -56,11 +56,19 @@ function HRDashboard() {
         fetchAllData();
     }, [refreshFlag]);
 
+    // Update PTO using the value from bulkPTO.
     const updatePTO = async (employeeId) => {
+        // Find the updated PTO value for this employee.
+        const record = bulkPTO.find((r) => String(r.employee_id) === String(employeeId));
+        if (!record) {
+            setMessage(`No PTO record found for Employee ID: ${employeeId}`);
+            return;
+        }
+        const newBalance = record.pto_balance;
         try {
             await axios.patch(
                 `${baseURL}api/user/employees/${employeeId}/pto/`,
-                { pto_balance: ptoBalance[employeeId] },
+                { pto_balance: newBalance },
                 { withCredentials: true }
             );
             setMessage(`PTO updated for Employee ID: ${employeeId}`);
@@ -92,7 +100,7 @@ function HRDashboard() {
                             (record) =>
                                 String(record.employee_id) === String(employee.id)
                         );
-                        // Use the bulk record's PTO balance if found, otherwise fallback to employee.pto_balance.
+                        // Use the bulk record's PTO balance if found; otherwise fallback to employee.pto_balance.
                         const balance = bulkRecord ? bulkRecord.pto_balance : employee.pto_balance;
                         return (
                             <tr key={employee.id}>
