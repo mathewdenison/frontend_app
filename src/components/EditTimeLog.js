@@ -1,36 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
+import { useRefresh } from "../contexts/RefreshContext"; // Import the custom hook
 
-function EditTimeLog({ closeModal }) {
+function EditTimeLog({ timelogId, closeModal }) {
     console.log("In EditTimeLog");
 
-    // Retrieve the employeeId from local storage.
-    const employeeId = localStorage.getItem("employeeId");
+    // Get the triggerRefresh function from RefreshContext.
+    const { triggerRefresh } = useRefresh();
 
-    const [log, setLog] = useState({});
-    const [formData, setFormData] = useState({});
+    // Initialize formData with empty values.
+    const [formData, setFormData] = useState({
+        monday_hours: "",
+        tuesday_hours: "",
+        wednesday_hours: "",
+        thursday_hours: "",
+        friday_hours: "",
+        pto_hours: ""
+    });
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // Use employeeId from local storage as a query parameter.
-                const response = await axios.get(
-                    `${baseURL}api/user/timelogs/${employeeId}/`,
-                    { withCredentials: true }
-                );
-                setLog(response.data);
-                setFormData(response.data);
-            } catch (error) {
-                console.error("Error fetching timelog:", error);
-                // Close the modal if fetching fails.
-                closeModal();
-            }
-        };
-        if (employeeId) {
-            fetchData();
-        }
-    }, [employeeId, baseURL, closeModal]);
 
     const handleChange = (e) => {
         setFormData({
@@ -42,12 +29,15 @@ function EditTimeLog({ closeModal }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Send employeeId as a query parameter in the PUT request.
-            const response = await axios.get(
-                `${baseURL}api/user/timelogs/${employeeId}/`,
+            // Directly send the PATCH update with the formData.
+            const response = await axios.patch(
+                `${baseURL}api/user/timelogs/${timelogId}/`,
+                formData,
                 { withCredentials: true }
             );
             console.log("Update response:", response.data);
+            // Trigger a refresh so that the page updates.
+            triggerRefresh();
             closeModal();
         } catch (error) {
             console.error("Error updating timelog:", error);
@@ -65,7 +55,7 @@ function EditTimeLog({ closeModal }) {
             >
                 ×
             </button>
-            <h2>Edit TimeLog for Employee {employeeId}</h2>
+            <h2>Edit TimeLog for ID {timelogId}</h2>
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label>
@@ -73,7 +63,7 @@ function EditTimeLog({ closeModal }) {
                         <input
                             type="number"
                             name="monday_hours"
-                            value={formData.monday_hours || ""}
+                            value={formData.monday_hours}
                             onChange={handleChange}
                         />
                     </label>
@@ -84,7 +74,7 @@ function EditTimeLog({ closeModal }) {
                         <input
                             type="number"
                             name="tuesday_hours"
-                            value={formData.tuesday_hours || ""}
+                            value={formData.tuesday_hours}
                             onChange={handleChange}
                         />
                     </label>
@@ -95,7 +85,7 @@ function EditTimeLog({ closeModal }) {
                         <input
                             type="number"
                             name="wednesday_hours"
-                            value={formData.wednesday_hours || ""}
+                            value={formData.wednesday_hours}
                             onChange={handleChange}
                         />
                     </label>
@@ -106,7 +96,7 @@ function EditTimeLog({ closeModal }) {
                         <input
                             type="number"
                             name="thursday_hours"
-                            value={formData.thursday_hours || ""}
+                            value={formData.thursday_hours}
                             onChange={handleChange}
                         />
                     </label>
@@ -117,7 +107,7 @@ function EditTimeLog({ closeModal }) {
                         <input
                             type="number"
                             name="friday_hours"
-                            value={formData.friday_hours || ""}
+                            value={formData.friday_hours}
                             onChange={handleChange}
                         />
                     </label>
@@ -128,7 +118,7 @@ function EditTimeLog({ closeModal }) {
                         <input
                             type="number"
                             name="pto_hours"
-                            value={formData.pto_hours || ""}
+                            value={formData.pto_hours}
                             onChange={handleChange}
                         />
                     </label>
