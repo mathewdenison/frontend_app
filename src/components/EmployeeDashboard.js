@@ -33,7 +33,7 @@ function EmployeeDashboard() {
     // Fetch bulk timelogs grouped by employee_id.
     const fetchBulkTimelogs = async () => {
         try {
-            const response = await axios.get(`${baseURL}api/user/bulk_timelogs/`, {
+            const response = await axios.get(`${baseURL}api/user/employees/timelogs`, {
                 withCredentials: true,
             });
             // Expecting response.data.timelogs to be an object keyed by employee_id.
