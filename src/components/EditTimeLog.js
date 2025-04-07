@@ -16,11 +16,8 @@ function EditTimeLog({ closeModal }) {
             try {
                 // Use employeeId from local storage as a query parameter.
                 const response = await axios.get(
-                    `${baseURL}api/user/timelogs/`,
-                    {
-                        withCredentials: true,
-                        params: { employee_id: employeeId }
-                    }
+                    `${baseURL}api/user/timelogs/${employeeId}/`,
+                    { withCredentials: true }
                 );
                 setLog(response.data);
                 setFormData(response.data);
