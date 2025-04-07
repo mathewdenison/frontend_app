@@ -1,22 +1,34 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-function EditTimeLog({ id, closeModal }) {
-    console.log("In EditTimeLog")
+function EditTimeLog({ closeModal }) {
+    console.log("In EditTimeLog");
+
+    // Retrieve the employeeId from local storage.
+    const employeeId = localStorage.getItem("employeeId");
+
     const [log, setLog] = useState({});
     const [formData, setFormData] = useState({});
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await axios.get(`${baseURL}api/user/timelogs/${id}/`, {
-                withCredentials: true,
-            });
-            setLog(response.data);
-            setFormData(response.data);
+            try {
+                // Use employeeId from local storage in the API URL.
+                const response = await axios.get(
+                    `${baseURL}api/user/timelogs/${employeeId}/`,
+                    { withCredentials: true }
+                );
+                setLog(response.data);
+                setFormData(response.data);
+            } catch (error) {
+                console.error("Error fetching timelog:", error);
+            }
         };
-        fetchData();
-    }, [id]);
+        if (employeeId) {
+            fetchData();
+        }
+    }, [employeeId, baseURL]);
 
     const handleChange = (e) => {
         setFormData({
@@ -25,19 +37,24 @@ function EditTimeLog({ id, closeModal }) {
         });
     };
 
-    const handleSubmit = async(e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        const response = await axios.put(`${baseURL}api/user/timelogs/${id}/`, formData, {
-            withCredentials: true,
-        });
-        console.log(response);
-        closeModal();
+        try {
+            const response = await axios.put(
+                `${baseURL}api/user/timelogs/${employeeId}/`,
+                formData,
+                { withCredentials: true }
+            );
+            console.log("Update response:", response.data);
+            closeModal();
+        } catch (error) {
+            console.error("Error updating timelog:", error);
+        }
     };
 
-    // Basic form structure with PTO and CSS to make each field have a new line.
     return (
         <div>
-            <h2>Edit TimeLog for {log.employee}</h2>
+            <h2>Edit TimeLog for Employee {employeeId}</h2>
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label>
@@ -45,7 +62,7 @@ function EditTimeLog({ id, closeModal }) {
                         <input
                             type="number"
                             name="monday_hours"
-                            value={formData.monday_hours}
+                            value={formData.monday_hours || ""}
                             onChange={handleChange}
                         />
                     </label>
@@ -56,7 +73,7 @@ function EditTimeLog({ id, closeModal }) {
                         <input
                             type="number"
                             name="tuesday_hours"
-                            value={formData.tuesday_hours}
+                            value={formData.tuesday_hours || ""}
                             onChange={handleChange}
                         />
                     </label>
@@ -67,7 +84,7 @@ function EditTimeLog({ id, closeModal }) {
                         <input
                             type="number"
                             name="wednesday_hours"
-                            value={formData.wednesday_hours}
+                            value={formData.wednesday_hours || ""}
                             onChange={handleChange}
                         />
                     </label>
@@ -78,7 +95,7 @@ function EditTimeLog({ id, closeModal }) {
                         <input
                             type="number"
                             name="thursday_hours"
-                            value={formData.thursday_hours}
+                            value={formData.thursday_hours || ""}
                             onChange={handleChange}
                         />
                     </label>
@@ -89,7 +106,7 @@ function EditTimeLog({ id, closeModal }) {
                         <input
                             type="number"
                             name="friday_hours"
-                            value={formData.friday_hours}
+                            value={formData.friday_hours || ""}
                             onChange={handleChange}
                         />
                     </label>
@@ -100,7 +117,7 @@ function EditTimeLog({ id, closeModal }) {
                         <input
                             type="number"
                             name="pto_hours"
-                            value={formData.pto_hours}
+                            value={formData.pto_hours || ""}
                             onChange={handleChange}
                         />
                     </label>
