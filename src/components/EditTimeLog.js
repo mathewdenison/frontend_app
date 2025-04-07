@@ -32,7 +32,7 @@ function EditTimeLog({ timelogId, closeModal }) {
         try {
             // Directly send the PATCH update with the formData.
             const response = await axios.patch(
-                `${baseURL}api/user/timelogs/${employeeId}/`,
+                `${baseURL}api/user/timelogs/update/${employeeId}/`,
                 formData,
                 { withCredentials: true }
             );
