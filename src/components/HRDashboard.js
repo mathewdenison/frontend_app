@@ -5,7 +5,6 @@ import { useRefresh } from "../contexts/RefreshContext"; // Import the custom ho
 function HRDashboard() {
     const [employees, setEmployees] = useState([]);
     const [bulkPTO, setBulkPTO] = useState([]);
-    const [ptoBalance, setPtoBalance] = useState({});
     const [message, setMessage] = useState("");
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
 
@@ -28,11 +27,11 @@ function HRDashboard() {
     // Fetch bulk PTO data.
     const fetchBulkPTO = async () => {
         try {
-            const response = await axios.post(`${baseURL}api/user/bulk_pto/`, {
+            const response = await axios.get(`${baseURL}api/user/bulk_pto/`, {
                 withCredentials: true,
             });
             // Expecting response.data.pto_records to be an array of objects:
-            // [ { employee_id: 1, pto_balance: 8 }, { employee_id: 2, pto_balance: 5 }, ... ]
+            // [ { employee_id: 7, pto_balance: 8 }, { employee_id: 9, pto_balance: 8 }, ... ]
             setBulkPTO(response.data.pto_records || []);
         } catch (error) {
             console.error("Error fetching bulk PTO data:", error);
@@ -88,11 +87,12 @@ function HRDashboard() {
                 <tbody>
                 {employees.length > 0 ? (
                     employees.map((employee) => {
-                        // Find the PTO record from bulkPTO using employee.id.
+                        // Find the bulk PTO record matching the employee's id.
                         const bulkRecord = bulkPTO.find(
-                            (record) => String(record.employee_id) === String(employee.id)
+                            (record) =>
+                                String(record.employee_id) === String(employee.id)
                         );
-                        // Use the bulk record's PTO balance if found, otherwise fallback to the employee record.
+                        // Use the bulk record's PTO balance if found, otherwise fallback to employee.pto_balance.
                         const balance = bulkRecord ? bulkRecord.pto_balance : employee.pto_balance;
                         return (
                             <tr key={employee.id}>
@@ -103,12 +103,15 @@ function HRDashboard() {
                                 <td>
                                     <input
                                         type="number"
-                                        value={ptoBalance[employee.id] || ""}
+                                        value={bulkRecord ? bulkRecord.pto_balance : ""}
                                         onChange={(e) =>
-                                            setPtoBalance({
-                                                ...ptoBalance,
-                                                [employee.id]: e.target.value,
-                                            })
+                                            setBulkPTO(
+                                                bulkPTO.map((record) =>
+                                                    String(record.employee_id) === String(employee.id)
+                                                        ? { ...record, pto_balance: e.target.value }
+                                                        : record
+                                                )
+                                            )
                                         }
                                     />
                                     <button onClick={() => updatePTO(employee.id)}>
