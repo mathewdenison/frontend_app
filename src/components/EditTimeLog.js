@@ -14,16 +14,19 @@ function EditTimeLog({ closeModal }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Use employeeId from local storage in the API URL.
+                // Use employeeId from local storage as a query parameter.
                 const response = await axios.get(
-                    `${baseURL}api/user/timelogs/${employeeId}/`,
-                    { withCredentials: true }
+                    `${baseURL}api/user/timelogs/`,
+                    {
+                        withCredentials: true,
+                        params: { employee_id: employeeId }
+                    }
                 );
                 setLog(response.data);
                 setFormData(response.data);
             } catch (error) {
                 console.error("Error fetching timelog:", error);
-                // If fetching fails, close the modal automatically.
+                // Close the modal if fetching fails.
                 closeModal();
             }
         };
@@ -42,16 +45,20 @@ function EditTimeLog({ closeModal }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Send employeeId as a query parameter in the PUT request.
             const response = await axios.put(
-                `${baseURL}api/user/timelogs/${employeeId}/`,
+                `${baseURL}api/user/timelogs/`,
                 formData,
-                { withCredentials: true }
+                {
+                    withCredentials: true,
+                    params: { employee_id: employeeId }
+                }
             );
             console.log("Update response:", response.data);
             closeModal();
         } catch (error) {
             console.error("Error updating timelog:", error);
-            // If the update fails, close the modal automatically.
+            // Close the modal automatically on failure.
             closeModal();
         }
     };
