@@ -27,7 +27,7 @@ function HRDashboard() {
     // Fetch bulk PTO data.
     const fetchBulkPTO = async () => {
         try {
-            const response = await axios.get(`${baseURL}api/user/bulk_pto/`, {
+            const response = await axios.post(`${baseURL}api/user/bulk_pto/`, {
                 withCredentials: true,
             });
             // Expecting response.data.pto_records to be an array of objects:
