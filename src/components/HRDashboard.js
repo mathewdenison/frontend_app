@@ -30,9 +30,11 @@ function HRDashboard() {
             const response = await axios.post(`${baseURL}api/user/bulk_pto/`, {
                 withCredentials: true,
             });
-            // Expecting response.data.pto_records to be an array of objects:
-            // [ { employee_id: 7, pto_balance: 8 }, { employee_id: 9, pto_balance: 8 }, ... ]
-            setBulkPTO(response.data.pto_records || []);
+            // Check if the response includes a payload property.
+            const ptoRecords = response.data.payload
+                ? response.data.payload.pto_records
+                : response.data.pto_records;
+            setBulkPTO(ptoRecords || []);
         } catch (error) {
             console.error("Error fetching bulk PTO data:", error);
             setMessage("Failed to fetch PTO data.");
@@ -56,7 +58,6 @@ function HRDashboard() {
         fetchAllData();
     }, [refreshFlag]);
 
-    // Update PTO using the value from bulkPTO.
     const updatePTO = async (employeeId) => {
         // Find the updated PTO value for this employee.
         const record = bulkPTO.find((r) => String(r.employee_id) === String(employeeId));
