@@ -3,6 +3,7 @@ import axios from "axios";
 import { useRefresh } from "../contexts/RefreshContext"; // Import the custom hook
 
 function HRDashboard() {
+    const [employees, setEmployees] = useState([]);
     const [bulkPTO, setBulkPTO] = useState([]);
     const [ptoBalance, setPtoBalance] = useState({});
     const [message, setMessage] = useState("");
@@ -11,29 +12,49 @@ function HRDashboard() {
     // Get the refresh flag from our RefreshContext.
     const { refreshFlag } = useRefresh();
 
+    // Fetch the employee list.
+    const fetchEmployees = async () => {
+        try {
+            const response = await axios.get(`${baseURL}api/user/employees/`, {
+                withCredentials: true,
+            });
+            setEmployees(response.data);
+        } catch (error) {
+            console.error("Error fetching employees:", error);
+            setMessage("Failed to fetch employees.");
+        }
+    };
+
     // Fetch bulk PTO data.
     const fetchBulkPTO = async () => {
         try {
             const response = await axios.get(`${baseURL}api/user/bulk_pto/`, {
                 withCredentials: true,
             });
-            // Assume response.data.pto_records is an array of objects:
+            // Expecting response.data.pto_records to be an array of objects:
             // [ { employee_id: 1, pto_balance: 8 }, { employee_id: 2, pto_balance: 5 }, ... ]
             setBulkPTO(response.data.pto_records || []);
         } catch (error) {
             console.error("Error fetching bulk PTO data:", error);
+            setMessage("Failed to fetch PTO data.");
         }
+    };
+
+    // Combined data fetch.
+    const fetchAllData = async () => {
+        await fetchEmployees();
+        await fetchBulkPTO();
     };
 
     // Initial fetch on component mount.
     useEffect(() => {
-        fetchBulkPTO();
+        fetchAllData();
     }, []);
 
-    // Re-fetch bulk PTO data whenever the refresh flag changes.
+    // Re-fetch data whenever the refresh flag changes.
     useEffect(() => {
-        console.log("Refresh flag changed in HRDashboard, re-fetching bulk PTO data...");
-        fetchBulkPTO();
+        console.log("Refresh flag updated in HRDashboard, re-fetching data...");
+        fetchAllData();
     }, [refreshFlag]);
 
     const updatePTO = async (employeeId) => {
@@ -58,32 +79,50 @@ function HRDashboard() {
                 <thead>
                 <tr>
                     <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
                     <th>PTO Balance</th>
                     <th>Update PTO</th>
                 </tr>
                 </thead>
                 <tbody>
-                {bulkPTO.map((record) => (
-                    <tr key={record.employee_id}>
-                        <td>{record.employee_id}</td>
-                        <td>{record.pto_balance}</td>
-                        <td>
-                            <input
-                                type="number"
-                                value={ptoBalance[record.employee_id] || ""}
-                                onChange={(e) =>
-                                    setPtoBalance({
-                                        ...ptoBalance,
-                                        [record.employee_id]: e.target.value,
-                                    })
-                                }
-                            />
-                            <button onClick={() => updatePTO(record.employee_id)}>
-                                Update
-                            </button>
-                        </td>
+                {employees.length > 0 ? (
+                    employees.map((employee) => {
+                        // Find the PTO record from bulkPTO using employee.id.
+                        const bulkRecord = bulkPTO.find(
+                            (record) => String(record.employee_id) === String(employee.id)
+                        );
+                        // Use the bulk record's PTO balance if found, otherwise fallback to the employee record.
+                        const balance = bulkRecord ? bulkRecord.pto_balance : employee.pto_balance;
+                        return (
+                            <tr key={employee.id}>
+                                <td>{employee.id}</td>
+                                <td>{employee.name}</td>
+                                <td>{employee.email}</td>
+                                <td>{balance}</td>
+                                <td>
+                                    <input
+                                        type="number"
+                                        value={ptoBalance[employee.id] || ""}
+                                        onChange={(e) =>
+                                            setPtoBalance({
+                                                ...ptoBalance,
+                                                [employee.id]: e.target.value,
+                                            })
+                                        }
+                                    />
+                                    <button onClick={() => updatePTO(employee.id)}>
+                                        Update
+                                    </button>
+                                </td>
+                            </tr>
+                        );
+                    })
+                ) : (
+                    <tr>
+                        <td colSpan="5">No employees found.</td>
                     </tr>
-                ))}
+                )}
                 </tbody>
             </table>
         </div>
