@@ -43,13 +43,9 @@ function EditTimeLog({ closeModal }) {
         e.preventDefault();
         try {
             // Send employeeId as a query parameter in the PUT request.
-            const response = await axios.put(
-                `${baseURL}api/user/timelogs/`,
-                formData,
-                {
-                    withCredentials: true,
-                    params: { employee_id: employeeId }
-                }
+            const response = await axios.get(
+                `${baseURL}api/user/timelogs/${employeeId}/`,
+                { withCredentials: true }
             );
             console.log("Update response:", response.data);
             closeModal();
