@@ -30,11 +30,8 @@ function HRDashboard() {
             const response = await axios.post(`${baseURL}api/user/bulk_pto/`, {
                 withCredentials: true,
             });
-            // Check if the response includes a payload property.
-            const ptoRecords = response.data.payload
-                ? response.data.payload.pto_records
-                : response.data.pto_records;
-            setBulkPTO(ptoRecords || []);
+            // Expecting response.data.pto_records to be an array of objects.
+            setBulkPTO(response.data.pto_records || []);
         } catch (error) {
             console.error("Error fetching bulk PTO data:", error);
             setMessage("Failed to fetch PTO data.");
@@ -47,7 +44,7 @@ function HRDashboard() {
         await fetchBulkPTO();
     };
 
-    // Initial fetch on component mount.
+    // Initial fetch when component mounts.
     useEffect(() => {
         fetchAllData();
     }, []);
@@ -57,6 +54,22 @@ function HRDashboard() {
         console.log("Refresh flag updated in HRDashboard, re-fetching data...");
         fetchAllData();
     }, [refreshFlag]);
+
+    // Listen for real-time socket updates for bulk PTO.
+    useEffect(() => {
+        const handleDashboardUpdate = (e) => {
+            const update = e.detail;
+            console.log("Socket dashboardUpdate event received:", update);
+            if (update.type === "bulk_pto_lookup" && update.payload && update.payload.pto_records) {
+                // Update the bulkPTO state with the data from the socket message.
+                setBulkPTO(update.payload.pto_records);
+                console.log("Updated bulkPTO from socket message:", update.payload.pto_records);
+            }
+        };
+
+        window.addEventListener("dashboardUpdate", handleDashboardUpdate);
+        return () => window.removeEventListener("dashboardUpdate", handleDashboardUpdate);
+    }, []);
 
     const updatePTO = async (employeeId) => {
         // Find the updated PTO value for this employee.
@@ -98,8 +111,7 @@ function HRDashboard() {
                     employees.map((employee) => {
                         // Find the bulk PTO record matching the employee's id.
                         const bulkRecord = bulkPTO.find(
-                            (record) =>
-                                String(record.employee_id) === String(employee.id)
+                            (record) => String(record.employee_id) === String(employee.id)
                         );
                         // Use the bulk record's PTO balance if found; otherwise fallback to employee.pto_balance.
                         const balance = bulkRecord ? bulkRecord.pto_balance : employee.pto_balance;
