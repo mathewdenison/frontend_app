@@ -23,12 +23,14 @@ function EditTimeLog({ closeModal }) {
                 setFormData(response.data);
             } catch (error) {
                 console.error("Error fetching timelog:", error);
+                // If fetching fails, close the modal automatically.
+                closeModal();
             }
         };
         if (employeeId) {
             fetchData();
         }
-    }, [employeeId, baseURL]);
+    }, [employeeId, baseURL, closeModal]);
 
     const handleChange = (e) => {
         setFormData({
@@ -49,11 +51,20 @@ function EditTimeLog({ closeModal }) {
             closeModal();
         } catch (error) {
             console.error("Error updating timelog:", error);
+            // If the update fails, close the modal automatically.
+            closeModal();
         }
     };
 
     return (
-        <div>
+        <div style={{ position: "relative", padding: "20px", backgroundColor: "#fff" }}>
+            {/* Close button at the top right */}
+            <button
+                onClick={closeModal}
+                style={{ position: "absolute", top: 5, right: 5, fontSize: "16px", cursor: "pointer" }}
+            >
+                ×
+            </button>
             <h2>Edit TimeLog for Employee {employeeId}</h2>
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
