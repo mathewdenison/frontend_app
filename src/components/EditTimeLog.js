@@ -7,6 +7,7 @@ function EditTimeLog({ timelogId, closeModal }) {
 
     // Get the triggerRefresh function from RefreshContext.
     const { triggerRefresh } = useRefresh();
+    const employeeId = localStorage.getItem("employeeId");
 
     // Initialize formData with empty values.
     const [formData, setFormData] = useState({
@@ -31,7 +32,7 @@ function EditTimeLog({ timelogId, closeModal }) {
         try {
             // Directly send the PATCH update with the formData.
             const response = await axios.patch(
-                `${baseURL}api/user/timelogs/${timelogId}/`,
+                `${baseURL}api/user/timelogs/${employeeId}/`,
                 formData,
                 { withCredentials: true }
             );
