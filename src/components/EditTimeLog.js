@@ -6,6 +6,9 @@ function EditTimeLog({ timelogId, closeModal }) {
     console.log("In EditTimeLog for timelogId", timelogId);
     const { triggerRefresh } = useRefresh();
 
+    // Retrieve the employeeId from local storage.
+    const employeeId = localStorage.getItem("employeeId");
+
     // Initialize formData with empty values.
     const [formData, setFormData] = useState({
         monday_hours: "",
@@ -27,10 +30,13 @@ function EditTimeLog({ timelogId, closeModal }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Send PATCH update with formData using the provided timelogId.
+            // Merge the formData with employee_id from local storage.
+            const payload = { ...formData, employee_id: employeeId };
+
+            // Send the PATCH update using the timelogId in the URL.
             const response = await axios.patch(
                 `${baseURL}api/user/timelogs/update/${timelogId}/`,
-                formData,
+                payload,
                 { withCredentials: true }
             );
             console.log("Update response:", response.data);
@@ -44,6 +50,7 @@ function EditTimeLog({ timelogId, closeModal }) {
 
     return (
         <div style={{ position: "relative", padding: "20px", backgroundColor: "#fff" }}>
+            {/* Close button at the top right */}
             <button
                 onClick={closeModal}
                 style={{ position: "absolute", top: 5, right: 5, fontSize: "16px", cursor: "pointer" }}
