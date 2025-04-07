@@ -3,11 +3,8 @@ import axios from "axios";
 import { useRefresh } from "../contexts/RefreshContext"; // Import the custom hook
 
 function EditTimeLog({ timelogId, closeModal }) {
-    console.log("In EditTimeLog");
-
-    // Get the triggerRefresh function from RefreshContext.
+    console.log("In EditTimeLog for timelogId", timelogId);
     const { triggerRefresh } = useRefresh();
-    const employeeId = localStorage.getItem("employeeId");
 
     // Initialize formData with empty values.
     const [formData, setFormData] = useState({
@@ -30,26 +27,23 @@ function EditTimeLog({ timelogId, closeModal }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Directly send the PATCH update with the formData.
+            // Send PATCH update with formData using the provided timelogId.
             const response = await axios.patch(
-                `${baseURL}api/user/timelogs/update/${employeeId}/`,
+                `${baseURL}api/user/timelogs/update/${timelogId}/`,
                 formData,
                 { withCredentials: true }
             );
             console.log("Update response:", response.data);
-            // Trigger a refresh so that the page updates.
             triggerRefresh();
             closeModal();
         } catch (error) {
             console.error("Error updating timelog:", error);
-            // Close the modal automatically on failure.
             closeModal();
         }
     };
 
     return (
         <div style={{ position: "relative", padding: "20px", backgroundColor: "#fff" }}>
-            {/* Close button at the top right */}
             <button
                 onClick={closeModal}
                 style={{ position: "absolute", top: 5, right: 5, fontSize: "16px", cursor: "pointer" }}
