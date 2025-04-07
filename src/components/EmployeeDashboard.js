@@ -30,9 +30,23 @@ function EmployeeDashboard() {
         }
     };
 
+    const fetchBulkTimelogs = async () => {
+        try {
+            const response = await axios.get(`${baseURL}api/user/bulk_timelogs/`, {
+                withCredentials: true,
+            });
+            // Expecting response.data.timelogs to be an object keyed by employee_id.
+            setBulkTimelogs(response.data.timelogs || {});
+        } catch (err) {
+            console.error("Error fetching bulk timelogs:", err);
+            setError("Failed to fetch timelogs.");
+        }
+    };
+
     // Initial fetch for employee list.
     useEffect(() => {
         fetchEmployees();
+        fetchBulkTimelogs();
     }, []);
 
     // Listen for real-time socket updates via a custom event.
