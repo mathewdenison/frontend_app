@@ -3,34 +3,37 @@ import axios from "axios";
 import { useRefresh } from "../contexts/RefreshContext"; // Import the custom hook
 
 function HRDashboard() {
-    const [employees, setEmployees] = useState([]);
+    const [bulkPTO, setBulkPTO] = useState([]);
     const [ptoBalance, setPtoBalance] = useState({});
     const [message, setMessage] = useState("");
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
 
-    // Get the refresh flag from our RefreshContext
+    // Get the refresh flag from our RefreshContext.
     const { refreshFlag } = useRefresh();
 
-    const fetchEmployees = async () => {
+    // Fetch bulk PTO data.
+    const fetchBulkPTO = async () => {
         try {
-            const response = await axios.get(`${baseURL}api/user/employees/`, {
+            const response = await axios.get(`${baseURL}api/user/bulk_pto/`, {
                 withCredentials: true,
             });
-            setEmployees(response.data);
+            // Assume response.data.pto_records is an array of objects:
+            // [ { employee_id: 1, pto_balance: 8 }, { employee_id: 2, pto_balance: 5 }, ... ]
+            setBulkPTO(response.data.pto_records || []);
         } catch (error) {
-            console.error("Error fetching employees:", error);
+            console.error("Error fetching bulk PTO data:", error);
         }
     };
 
-    // Initial fetch when component mounts
+    // Initial fetch on component mount.
     useEffect(() => {
-        fetchEmployees();
+        fetchBulkPTO();
     }, []);
 
-    // Re-fetch employees whenever the refresh flag changes
+    // Re-fetch bulk PTO data whenever the refresh flag changes.
     useEffect(() => {
-        console.log("Refresh flag changed in HRDashboard, re-fetching employees...");
-        fetchEmployees();
+        console.log("Refresh flag changed in HRDashboard, re-fetching bulk PTO data...");
+        fetchBulkPTO();
     }, [refreshFlag]);
 
     const updatePTO = async (employeeId) => {
@@ -54,30 +57,28 @@ function HRDashboard() {
             <table border="1">
                 <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Name</th>
+                    <th>Employee ID</th>
                     <th>PTO Balance</th>
                     <th>Update PTO</th>
                 </tr>
                 </thead>
                 <tbody>
-                {employees.map((employee) => (
-                    <tr key={employee.id}>
-                        <td>{employee.id}</td>
-                        <td>{employee.name}</td>
-                        <td>{employee.pto_balance}</td>
+                {bulkPTO.map((record) => (
+                    <tr key={record.employee_id}>
+                        <td>{record.employee_id}</td>
+                        <td>{record.pto_balance}</td>
                         <td>
                             <input
                                 type="number"
-                                value={ptoBalance[employee.id] || ""}
+                                value={ptoBalance[record.employee_id] || ""}
                                 onChange={(e) =>
                                     setPtoBalance({
                                         ...ptoBalance,
-                                        [employee.id]: e.target.value,
+                                        [record.employee_id]: e.target.value,
                                     })
                                 }
                             />
-                            <button onClick={() => updatePTO(employee.id)}>
+                            <button onClick={() => updatePTO(record.employee_id)}>
                                 Update
                             </button>
                         </td>
