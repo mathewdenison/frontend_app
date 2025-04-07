@@ -69,6 +69,7 @@ function EmployeeDashboard() {
     useEffect(() => {
         console.log("Refresh flag updated in EmployeeDashboard, re-fetching employee list...");
         fetchEmployees();
+        fetchBulkTimelogs();
     }, [refreshFlag]);
 
     return (
