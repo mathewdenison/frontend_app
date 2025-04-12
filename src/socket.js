@@ -3,7 +3,7 @@ let socket;
 export const connectSocket = (employee_id, auth_token) => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     // Use the public IP from your ingress
-    const host = "34.133.98.208";
+    const host = "dashboard-service-625470861295.us-central1.run.app";
     // Update the path if needed (this example uses /ws/dashboard)
     const wsUrl = `${protocol}://${host}/ws/dashboard?employee_id=${employee_id}&auth_token=${auth_token}`;
 
