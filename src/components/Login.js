@@ -32,7 +32,8 @@ function Login() {
         localStorage.setItem("isLoggedIn", JSON.stringify(isLoggedIn));
         localStorage.setItem("employeeId", JSON.stringify(employeeId));
         localStorage.setItem("role", role);
-    }, [isLoggedIn, employeeId, role]);
+        localStorage.setItem("username", username); // ✅ Store username
+    }, [isLoggedIn, employeeId, role, username]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
