@@ -19,21 +19,23 @@ function Logout({ setLoggedIn }) {
                 { withCredentials: true } // Only useful if cookies were being used
             );
 
+            // Clean up localStorage
             localStorage.removeItem("isLoggedIn");
             localStorage.removeItem("employeeId");
             localStorage.removeItem("role");
+            localStorage.removeItem("username"); // ✅ Remove username as well
             setLoggedIn(false);
             console.log("User logged out");
         } catch (err) {
             console.error("Logout failed", err);
             // Still force logout even if request fails
-            setLoggedIn(false);
             localStorage.removeItem("isLoggedIn");
             localStorage.removeItem("employeeId");
             localStorage.removeItem("role");
+            localStorage.removeItem("username"); // ✅ Ensure cleanup here too
+            setLoggedIn(false);
         }
     };
-
 
     return <button onClick={logoutUser}>Logout</button>;
 }
