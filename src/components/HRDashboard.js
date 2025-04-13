@@ -4,7 +4,7 @@ import { useRefresh } from "../contexts/RefreshContext";
 
 function HRDashboard() {
     const [employees, setEmployees] = useState([]);
-    const [bulkPTO, setBulkPTO] = useState([]);
+    const [bulkPTO, setBulkPTO] = useState({});
     const [message, setMessage] = useState("");
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
 
@@ -31,7 +31,7 @@ function HRDashboard() {
         try {
             const response = await axios.post(
                 `${baseURL}api/user/bulk_pto/`,
-                {}, // <-- send an actual body, even an empty one
+                {}, // still necessary for POST
                 {
                     withCredentials: true,
                     headers: {
@@ -40,13 +40,19 @@ function HRDashboard() {
                     },
                 }
             );
-            setBulkPTO(response.data.pto_records || []);
+
+            const ptoArray = response.data.pto_records || [];
+            const ptoMap = {};
+            ptoArray.forEach((record) => {
+                ptoMap[String(record.employee_id)] = record;
+            });
+
+            setBulkPTO(ptoMap);
         } catch (error) {
             console.error("Error fetching bulk PTO data:", error);
             setMessage("Failed to fetch PTO data.");
         }
     };
-
 
     const fetchAllData = async () => {
         await fetchEmployees();
@@ -66,9 +72,14 @@ function HRDashboard() {
         const handleDashboardUpdate = (e) => {
             const update = e.detail;
             console.log("Socket dashboardUpdate event received:", update);
+
             if (update.type === "bulk_pto_lookup" && update.payload?.pto_records) {
-                setBulkPTO(update.payload.pto_records);
-                console.log("Updated bulkPTO from socket message:", update.payload.pto_records);
+                const updatedPTO = {};
+                update.payload.pto_records.forEach((record) => {
+                    updatedPTO[String(record.employee_id)] = record;
+                });
+                setBulkPTO(updatedPTO);
+                console.log("Updated bulkPTO from socket message:", updatedPTO);
             }
         };
 
@@ -77,7 +88,7 @@ function HRDashboard() {
     }, []);
 
     const updatePTO = async (employeeId) => {
-        const record = bulkPTO.find((r) => String(r.employee_id) === String(employeeId));
+        const record = bulkPTO[String(employeeId)];
         if (!record) {
             setMessage(`No PTO record found for Employee ID: ${employeeId}`);
             return;
@@ -115,13 +126,13 @@ function HRDashboard() {
                 <tbody>
                 {employees.length > 0 ? (
                     employees.map((employee) => {
-                        const bulkRecord = bulkPTO.find(
-                            (record) => String(record.employee_id) === String(employee.id)
-                        );
+                        const empId = String(employee.employee_id || employee.id);
+                        const bulkRecord = bulkPTO[empId];
                         const balance = bulkRecord ? bulkRecord.pto_balance : employee.pto_balance;
+
                         return (
-                            <tr key={employee.id}>
-                                <td>{employee.id}</td>
+                            <tr key={empId}>
+                                <td>{empId}</td>
                                 <td>{employee.name}</td>
                                 <td>{employee.email}</td>
                                 <td>{balance}</td>
@@ -130,16 +141,16 @@ function HRDashboard() {
                                         type="number"
                                         value={bulkRecord ? bulkRecord.pto_balance : ""}
                                         onChange={(e) =>
-                                            setBulkPTO(
-                                                bulkPTO.map((record) =>
-                                                    String(record.employee_id) === String(employee.id)
-                                                        ? { ...record, pto_balance: e.target.value }
-                                                        : record
-                                                )
-                                            )
+                                            setBulkPTO((prev) => ({
+                                                ...prev,
+                                                [empId]: {
+                                                    ...prev[empId],
+                                                    pto_balance: parseInt(e.target.value, 10) || 0,
+                                                },
+                                            }))
                                         }
                                     />
-                                    <button onClick={() => updatePTO(employee.id)}>
+                                    <button onClick={() => updatePTO(empId)}>
                                         Update
                                     </button>
                                 </td>
