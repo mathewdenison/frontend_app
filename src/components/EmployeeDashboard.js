@@ -79,17 +79,24 @@ function EmployeeDashboard() {
                 </thead>
                 <tbody>
                 {employees.length > 0 ? (
-                    employees.map((employee) => {
-                        const empId = String(employee.id);
-                        const logs = bulkTimelogs[empId] || [];
+                    employees.map((employee, index) => {
+                        const empUUID = String(employee.employee_id || employee.id); // UUID preferred
+                        const fallbackNumericKey = String(index + 7); // Fallback if needed
+
+                        const logs =
+                            bulkTimelogs[empUUID] ||
+                            bulkTimelogs[employee.employee_id] ||
+                            bulkTimelogs[fallbackNumericKey] ||
+                            [];
+
                         return (
-                            <tr key={employee.id}>
-                                <td>{employee.id}</td>
+                            <tr key={empUUID}>
+                                <td>{empUUID}</td>
                                 <td>{employee.name}</td>
                                 <td>{employee.email}</td>
                                 <td>
                                     {logs.length > 0 ? (
-                                        logs.map((log, index) => {
+                                        logs.map((log, idx) => {
                                             const totalHours =
                                                 log.monday_hours +
                                                 log.tuesday_hours +
@@ -98,13 +105,18 @@ function EmployeeDashboard() {
                                                 log.friday_hours;
                                             return (
                                                 <div
-                                                    key={`${employee.id}-${index}`}
-                                                    style={{ borderBottom: "1px solid #ccc", padding: "5px" }}
+                                                    key={`${empUUID}-${idx}`}
+                                                    style={{
+                                                        borderBottom: "1px solid #ccc",
+                                                        padding: "5px",
+                                                    }}
                                                 >
                                                     <p>Week Start Date: {log.week_start_date}</p>
                                                     <p>Total Hours Worked: {totalHours}</p>
                                                     <p>PTO Hours: {log.pto_hours}</p>
-                                                    <button onClick={() => setEditingLogId(log.id)}>
+                                                    <button
+                                                        onClick={() => setEditingLogId(log.timelog_id || log.id)}
+                                                    >
                                                         Edit
                                                     </button>
                                                 </div>
@@ -124,6 +136,7 @@ function EmployeeDashboard() {
                 )}
                 </tbody>
             </table>
+
             {editingLogId && (
                 <Modal isOpen={true}>
                     <EditTimeLog timelogId={editingLogId} closeModal={() => setEditingLogId(null)} />
