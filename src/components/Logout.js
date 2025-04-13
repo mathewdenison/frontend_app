@@ -7,21 +7,18 @@ function Logout({ setLoggedIn }) {
 
     const logoutUser = async () => {
         try {
-            // Disconnect the socket if it exists.
             const socket = getSocket();
             if (socket) {
                 socket.close();
                 console.log("Socket disconnected on logout");
             }
 
-            // Send request to logout endpoint.
             await axios.post(
                 `${baseURL}api/user/logout/`,
-                {}, // No payload needed.
-                { withCredentials: true }
+                {},
+                { withCredentials: true } // Only useful if cookies were being used
             );
 
-            // Clean up localStorage and update state.
             localStorage.removeItem("isLoggedIn");
             localStorage.removeItem("employeeId");
             localStorage.removeItem("role");
@@ -29,8 +26,14 @@ function Logout({ setLoggedIn }) {
             console.log("User logged out");
         } catch (err) {
             console.error("Logout failed", err);
+            // Still force logout even if request fails
+            setLoggedIn(false);
+            localStorage.removeItem("isLoggedIn");
+            localStorage.removeItem("employeeId");
+            localStorage.removeItem("role");
         }
     };
+
 
     return <button onClick={logoutUser}>Logout</button>;
 }
