@@ -29,15 +29,23 @@ function HRDashboard() {
 
     const fetchBulkPTO = async () => {
         try {
-            const response = await axios.post(`${baseURL}api/user/bulk_pto/`, {}, {
-                headers: commonHeaders,
-            });
+            const response = await axios.post(
+                `${baseURL}api/user/bulk_pto/`,
+                {}, // <-- send an actual body, even an empty one
+                {
+                    withCredentials: true,
+                    headers: {
+                        'X-Username': localStorage.getItem("username"),
+                    },
+                }
+            );
             setBulkPTO(response.data.pto_records || []);
         } catch (error) {
             console.error("Error fetching bulk PTO data:", error);
             setMessage("Failed to fetch PTO data.");
         }
     };
+
 
     const fetchAllData = async () => {
         await fetchEmployees();
