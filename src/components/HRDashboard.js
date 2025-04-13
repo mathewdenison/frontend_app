@@ -36,6 +36,7 @@ function HRDashboard() {
                     withCredentials: true,
                     headers: {
                         'X-Username': localStorage.getItem("username"),
+                        'Content-Type': 'application/json',
                     },
                 }
             );
