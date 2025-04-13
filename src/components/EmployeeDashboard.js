@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Modal from 'react-modal';
 import EditTimeLog from './EditTimeLog';
-import { useRefresh } from "../contexts/RefreshContext"; // Import our custom hook
+import { useRefresh } from "../contexts/RefreshContext";
 import './Timesheet.css';
 
 Modal.setAppElement('#root');
@@ -14,13 +14,17 @@ function EmployeeDashboard() {
     const [editingLogId, setEditingLogId] = useState(null);
     const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
 
-    // Get the refresh flag from our RefreshContext.
     const { refreshFlag } = useRefresh();
+    const username = localStorage.getItem("username");
+
+    const headers = {
+        "X-Username": username,
+    };
 
     const fetchEmployees = async () => {
         try {
             const response = await axios.get(`${baseURL}api/user/employees/`, {
-                withCredentials: true,
+                headers,
             });
             setEmployees(response.data);
         } catch (error) {
@@ -32,9 +36,8 @@ function EmployeeDashboard() {
     const fetchBulkTimelogs = async () => {
         try {
             const response = await axios.get(`${baseURL}api/user/employees/timelogs/`, {
-                withCredentials: true,
+                headers,
             });
-            // Expecting response.data.timelogs to be an object keyed by employee_id.
             setBulkTimelogs(response.data.timelogs || {});
         } catch (err) {
             console.error("Error fetching bulk timelogs:", err);
@@ -42,12 +45,11 @@ function EmployeeDashboard() {
         }
     };
 
-    // We assume bulk timelogs are sent via the socket and update the state accordingly.
     useEffect(() => {
         const handleDashboardUpdate = (e) => {
             const update = e.detail;
             console.log("Dashboard update event received:", update);
-            if (update.type === "bulk_timelog_lookup" && update.payload && update.payload.timelogs) {
+            if (update.type === "bulk_timelog_lookup" && update.payload?.timelogs) {
                 setBulkTimelogs(update.payload.timelogs);
                 console.log("Updated bulk timelogs from socket:", update.payload.timelogs);
             }

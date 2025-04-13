@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Logout from "./Logout";
-import { useRefresh } from "../contexts/RefreshContext"; // Import our custom hook
+import { useRefresh } from "../contexts/RefreshContext";
 import './Timesheet.css';
 
 function dateFromStr(dateStr) {
-    if (dateStr instanceof Date) {
-        return dateStr;
-    }
+    if (dateStr instanceof Date) return dateStr;
     const [year, month, day] = dateStr.split("-").map(Number);
     return new Date(year, month - 1, day);
 }
@@ -15,7 +13,6 @@ function dateFromStr(dateStr) {
 function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
     const [ptoHours, setPtoHours] = useState(0);
     const [ptoBalance, setPtoBalance] = useState(0);
-    const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
     const [timesheetData, setTimesheetData] = useState({
         week_start_date: new Date(),
         week_end_date: new Date(),
@@ -27,22 +24,32 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
         pto_hours: 0,
     });
 
-    // Use our refresh context to trigger re-fetching of data.
+    const baseURL = process.env.REACT_APP_PUBLIC_BASE_URL;
     const { refreshFlag, triggerRefresh } = useRefresh();
+    const username = localStorage.getItem("username");
+
+    const headers = {
+        "X-Username": username,
+        "X-CSRFToken": csrfToken,
+    };
 
     const fetchInitialData = async () => {
         try {
-            const responseForWeek = await axios.get(`${baseURL}api/user/payPeriod`);
+            const responseForWeek = await axios.get(`${baseURL}api/user/payPeriod`, {
+                headers,
+            });
             const weekStartDate = responseForWeek.data.week_start_date;
             const weekEndDate = responseForWeek.data.week_end_date;
 
-            const responseForPtoBalance = await axios.get(`${baseURL}api/user/ptoBalance?employee_id=${employeeId}`);
+            const responseForPtoBalance = await axios.get(`${baseURL}api/user/ptoBalance?employee_id=${employeeId}`, {
+                headers,
+            });
             setPtoBalance(responseForPtoBalance.data.pto_balance);
 
             setTimesheetData((prevData) => ({
                 ...prevData,
                 week_start_date: weekStartDate,
-                week_end_date: weekEndDate
+                week_end_date: weekEndDate,
             }));
         } catch (error) {
             console.error("Error fetching initial data:", error);
@@ -51,42 +58,32 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
 
     useEffect(() => {
         fetchInitialData();
-
         if (csrfToken) {
-            console.log("Overriding csrftoken cookie in Timesheet.");
-            document.cookie = `csrftoken=${csrfToken}; path=/api/user/csrf; domain=34.133.98.208; SameSite=Lax`;
+            document.cookie = `csrftoken=${csrfToken}; path=/api/user/csrf; SameSite=Lax`;
         }
     }, [csrfToken, employeeId]);
 
-    // Listen for a custom "dashboardRefresh" event to trigger a refresh.
     useEffect(() => {
         const handleRefreshEvent = () => {
             console.log("Dashboard refresh event received in Timesheet.");
             triggerRefresh();
         };
-
         window.addEventListener("dashboardRefresh", handleRefreshEvent);
         return () => window.removeEventListener("dashboardRefresh", handleRefreshEvent);
     }, [triggerRefresh]);
 
-    // Listen for a "dashboardUpdate" event and update PTO balance if type is "pto_lookup"
     useEffect(() => {
         const handleDashboardUpdate = (e) => {
             const update = e.detail;
-            console.log("Dashboard update received:", update);
             if (update.type === "pto_lookup" && String(update.employee_id) === String(employeeId)) {
-                console.log("Received PTO lookup update via WebSocket, updating PTO balance to:", update.payload.pto_balance);
                 setPtoBalance(update.payload.pto_balance);
             }
         };
-
         window.addEventListener("dashboardUpdate", handleDashboardUpdate);
         return () => window.removeEventListener("dashboardUpdate", handleDashboardUpdate);
     }, [employeeId]);
 
-    // Re-fetch data whenever refreshFlag or employeeId changes.
     useEffect(() => {
-        console.log("Refresh flag updated in Timesheet, re-fetching data...");
         fetchInitialData();
     }, [refreshFlag, employeeId]);
 
@@ -96,12 +93,7 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
             const response = await axios.post(
                 `${baseURL}api/user/employees/${employeeId}/submit_timesheet/`,
                 { ...timesheetData, employee: employeeId, pto_hours: ptoHours },
-                {
-                    withCredentials: true,
-                    headers: {
-                        "X-CSRFToken": csrfToken,
-                    },
-                }
+                { headers }
             );
             console.log("Timesheet submitted:", response.data);
             alert("Timesheet submitted successfully!");
@@ -113,17 +105,11 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if(name === 'ptoHours') {
+        if (name === "ptoHours") {
             setPtoHours(value);
-            setTimesheetData((prevData) => ({
-                ...prevData,
-                pto_hours: value,
-            }));
+            setTimesheetData((prev) => ({ ...prev, pto_hours: value }));
         } else {
-            setTimesheetData((prevData) => ({
-                ...prevData,
-                [name]: value
-            }));
+            setTimesheetData((prev) => ({ ...prev, [name]: value }));
         }
     };
 
@@ -137,72 +123,24 @@ function Timesheet({ employeeId, csrfToken, setIsLoggedIn }) {
                 <Logout setLoggedIn={setIsLoggedIn} />
             </div>
             <form onSubmit={handleSubmit}>
-                <br/>
-                <label>
-                    Monday Hours:
-                    <input
-                        type="number"
-                        name="monday_hours"
-                        value={timesheetData.monday_hours}
-                        onChange={handleChange}
-                        required
-                    />
-                </label>
-                <br/>
-                <label>
-                    Tuesday Hours:
-                    <input
-                        type="number"
-                        name="tuesday_hours"
-                        value={timesheetData.tuesday_hours}
-                        onChange={handleChange}
-                        required
-                    />
-                </label>
-                <br/>
-                <label>
-                    Wednesday Hours:
-                    <input
-                        type="number"
-                        name="wednesday_hours"
-                        value={timesheetData.wednesday_hours}
-                        onChange={handleChange}
-                        required
-                    />
-                </label>
-                <br/>
-                <label>
-                    Thursday Hours:
-                    <input
-                        type="number"
-                        name="thursday_hours"
-                        value={timesheetData.thursday_hours}
-                        onChange={handleChange}
-                        required
-                    />
-                </label>
-                <br/>
-                <label>
-                    Friday Hours:
-                    <input
-                        type="number"
-                        name="friday_hours"
-                        value={timesheetData.friday_hours}
-                        onChange={handleChange}
-                        required
-                    />
-                </label>
-                <br/>
-                <label>
-                    PTO Hours:
-                    <input
-                        type="number"
-                        name="ptoHours"
-                        value={ptoHours}
-                        onChange={(e) => setPtoHours(e.target.value)}
-                        required
-                    />
-                </label>
+                <label>Monday Hours:
+                    <input type="number" name="monday_hours" value={timesheetData.monday_hours} onChange={handleChange} required />
+                </label><br />
+                <label>Tuesday Hours:
+                    <input type="number" name="tuesday_hours" value={timesheetData.tuesday_hours} onChange={handleChange} required />
+                </label><br />
+                <label>Wednesday Hours:
+                    <input type="number" name="wednesday_hours" value={timesheetData.wednesday_hours} onChange={handleChange} required />
+                </label><br />
+                <label>Thursday Hours:
+                    <input type="number" name="thursday_hours" value={timesheetData.thursday_hours} onChange={handleChange} required />
+                </label><br />
+                <label>Friday Hours:
+                    <input type="number" name="friday_hours" value={timesheetData.friday_hours} onChange={handleChange} required />
+                </label><br />
+                <label>PTO Hours:
+                    <input type="number" name="ptoHours" value={ptoHours} onChange={handleChange} required />
+                </label><br />
                 <button type="submit">Submit Timesheet</button>
             </form>
         </div>
